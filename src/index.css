@@ -1,0 +1,20 @@
+@import url('@xyflow/react/dist/style.css');
+/* we put the theme css at the end to override some of the default css variables and styles */
+@import url('./xy-theme.css');
+
+html,
+body {
+  margin: 0;
+  font-family: sans-serif;
+  box-sizing: border-box;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+.wrapper {
+  flex-grow: 1;
+  height: 100%;
+}
