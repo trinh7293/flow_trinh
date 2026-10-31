@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   ReactFlow,
   Background,
@@ -10,7 +10,10 @@ import {
   useReactFlow,
   type OnConnect,
   OnConnectEnd,
-  ReactFlowProvider
+  ReactFlowProvider,
+  Panel,
+  NodeMouseHandler,
+  Node
 } from '@xyflow/react';
 
 import '@xyflow/react/dist/style.css';
@@ -31,7 +34,9 @@ function AddNodeOnEdgeDrop () {
   const reactFlowWrapper = useRef(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const { screenToFlowPosition } = useReactFlow();
+  const [editLabel, setEditLabel] = useState('');
+  const [edittingId, setEdittingId] = useState<string | null>(null);
+  const { screenToFlowPosition, updateNodeData } = useReactFlow();
   const onConnect: OnConnect = useCallback(
     (connection) => setEdges((edges) => addEdge(connection, edges)),
     []
@@ -64,6 +69,19 @@ function AddNodeOnEdgeDrop () {
     },
     [screenToFlowPosition],
   );
+  const onNodeDoubleClick: NodeMouseHandler<Node> = useCallback((event, node) => {
+    event.preventDefault();
+    setEdittingId(node.id);
+    const nodeLabel = typeof node.data.label === 'string' ? node.data.label : '';
+    setEditLabel(nodeLabel);
+  }, [setEdittingId, setEditLabel]);
+  const onSaveEdit = useCallback(() => {
+    if (edittingId) {
+      updateNodeData(edittingId, { label: editLabel });
+      setEdittingId(null);
+      setEditLabel('');
+    }
+  }, [edittingId, editLabel, setNodes]);
 
   return (
     <div className="wrapper" ref={reactFlowWrapper}>
@@ -74,11 +92,27 @@ function AddNodeOnEdgeDrop () {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onConnectEnd={onConnectEnd}
+        onNodeDoubleClick={onNodeDoubleClick}
         fitView
         fitViewOptions={{ padding: 2 }}
         nodeOrigin={nodeOrigin}
         colorMode="dark"
       >
+        <Panel hidden={edittingId === null} position="top-left" style={{ width: 200 }}>
+        <label className="xy-theme__label">Label: </label>
+        <input
+          value={editLabel}
+          onChange={(evt) => setEditLabel(evt.target.value)}
+          className="xy-theme__input"
+        />
+        button
+        <button
+          type="submit"
+          onClick={(onSaveEdit)}
+        >
+          Update Label
+        </button>
+      </Panel>
         <Controls />
         <MiniMap />
         <Background />
